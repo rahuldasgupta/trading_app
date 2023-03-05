@@ -1,0 +1,11 @@
+YF FINANCE
+headers: {
+    'X-RapidAPI-Key': 'fda68741aamshbc802fc48d29613p1c42d9jsn437ceffc7a8e',
+    'X-RapidAPI-Host': 'yh-finance.p.rapidapi.com'
+}
+
+YAHOO FINANCE
+headers: {
+    'X-RapidAPI-Key': 'fda68741aamshbc802fc48d29613p1c42d9jsn437ceffc7a8e',
+    'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com'
+}

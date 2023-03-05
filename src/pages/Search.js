@@ -14,25 +14,26 @@ export default class Search extends Component {
     super(props);
     this.state = {
       searchHistory:"",
-      searchText:""
+      searchText:"",
+      searchData: []
     };
   }
-
-  async componentDidMount(){
-    NavigationBar.setBackgroundColorAsync("#E7E7E7");
-    NavigationBar.setButtonStyleAsync("dark");
-    this.checkSearchHistory();
-  }
-  handleChangeText = (data) => {
-    this.setState({
-        searchText: data
-    })
-    this.storeData(data);
-  }
-  storeData = async (data) => {
+    async componentDidMount(){
+        NavigationBar.setBackgroundColorAsync("#E7E7E7");
+        NavigationBar.setButtonStyleAsync("dark");
+        this.checkSearchHistory();
+    }
+    handleChangeText = (data) => {
+        this.setState({
+            searchText: data
+        })
+        this.storeData(data);
+        this.getSearchData(data)
+    }
+    storeData = async (data) => {
         await AsyncStorage.setItem('searchTerm', data);
     };
-  checkSearchHistory = async () => {
+    checkSearchHistory = async () => {
         let searchTerm = await AsyncStorage.getItem('searchTerm');
         console.log("SEARCH TERM ===>", searchTerm)
         if(searchTerm){
@@ -40,6 +41,31 @@ export default class Search extends Component {
                 searchHistory: searchTerm
             })
         }
+    }
+    getSearchData = async(searchTerm) => {
+
+        //API DOJO
+        const options = {
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': 'fda68741aamshbc802fc48d29613p1c42d9jsn437ceffc7a8e',
+                'X-RapidAPI-Host': 'yh-finance.p.rapidapi.com'
+            }
+        };
+        
+        await fetch('https://yh-finance.p.rapidapi.com/auto-complete?q='+ searchTerm + '&region=IN', options)
+            .then(response => response.json())
+            .then((response) => {
+                let dataSorted = []
+                dataSorted = response.quotes.filter(item => item.symbol.includes('.NS'));
+                console.log(dataSorted)
+                this.setState({searchData: dataSorted})
+                
+            })
+            .catch(err => console.error(err));
+    }
+    handleNavigation = (symbol) => {
+        this.props.navigation.navigate("Stock", {symbol: symbol})
     }
   render() {
     return (
@@ -65,6 +91,30 @@ export default class Search extends Component {
         </View>
         <Divider style={{height: 0.5, backgroundColor: '#ADADAD',  marginTop:0}}/>
         <View style={{margin: "5%"}}>
+            {
+                this.state.searchData ?
+                <>
+                    {
+                        this.state.searchData.map((item, key) =>(
+                            <View style={{flexDirection:"row", alignItems:"center", marginBottom: 18}}>
+                                <View style={{ backgroundColor:"#EBEBEB", width: 35, borderRadius:100, padding: 8}}>
+                                    <Image source={require("../../assets/search.png")} style={{height: 18, width: 18}} />
+                                </View>
+                                <View>
+                                    <TouchableOpacity onPress={() => this.handleNavigation(item.symbol)}>
+                                        <View>
+                                            <Text style={{marginLeft: 15, fontSize: 13.5}}>{item.longname}</Text>
+                                            <Text style={{marginLeft: 15, fontSize: 13.5, color:"#ADADAD", textTransform: 'uppercase'}}>{item.symbol}</Text>
+                                        </View>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        ))
+                    }
+                </>
+                :
+                <></>
+            }
             {
                 this.state.searchHistory ?
                 <View style={{flexDirection:"row", alignItems:"center", marginBottom: 18}}>
