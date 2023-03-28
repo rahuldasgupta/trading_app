@@ -19,7 +19,7 @@ export default class Search extends Component {
     };
   }
     async componentDidMount(){
-        NavigationBar.setBackgroundColorAsync("#E7E7E7");
+        NavigationBar.setBackgroundColorAsync("#fff");
         NavigationBar.setButtonStyleAsync("dark");
         this.checkSearchHistory();
     }
@@ -48,14 +48,15 @@ export default class Search extends Component {
         const options = {
             method: 'GET',
             headers: {
-                'X-RapidAPI-Key': 'fda68741aamshbc802fc48d29613p1c42d9jsn437ceffc7a8e',
-                'X-RapidAPI-Host': 'yh-finance.p.rapidapi.com'
+                'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
+                'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
             }
         };
         
-        await fetch('https://yh-finance.p.rapidapi.com/auto-complete?q='+ searchTerm + '&region=IN', options)
+        await fetch('https://apidojo-yahoo-finance-v1.p.rapidapi.com/auto-complete?q='+ searchTerm + '&region=IN', options)
             .then(response => response.json())
             .then((response) => {
+                console.log(response)
                 let dataSorted = []
                 dataSorted = response.quotes.filter(item => item.symbol.includes('.NS'));
                 console.log(dataSorted)
@@ -81,7 +82,8 @@ export default class Search extends Component {
                     fontSize: 19,
                     width: "80%",
                     marginLeft: 20,
-                    backgroundColor:"#fff"
+                    backgroundColor:"#fff",
+                    fontFamily:"Lato-Regular",
                 }}
                 value={this.state.searchText}
                 placeholder="Search"
@@ -117,15 +119,16 @@ export default class Search extends Component {
             }
             {
                 this.state.searchHistory ?
-                <View style={{flexDirection:"row", alignItems:"center", marginBottom: 18}}>
-                    <View style={{ backgroundColor:"#EBEBEB", width: 35, borderRadius:100, padding: 7.5}}>
-                        <Image source={require("../../assets/history.png")} style={{height: 20, width: 20}} />
+                <TouchableOpacity onPress={() => this.handleChangeText(this.state.searchHistory)}>
+                    <View style={{flexDirection:"row", alignItems:"center", marginBottom: 18}}>
+                        <View style={{ backgroundColor:"#EBEBEB", width: 35, borderRadius:100, padding: 7.5}}>
+                            <Image source={require("../../assets/history.png")} style={{height: 20, width: 20}} />
+                        </View>
+                        <View>
+                            <Text style={{marginLeft: 15, fontSize: 13.5,  textTransform: 'uppercase'}}>{this.state.searchHistory}</Text>
+                        </View>
                     </View>
-                    <View>
-                        <Text style={{marginLeft: 15, fontSize: 13.5}}>{this.state.searchHistory}</Text>
-                        <Text style={{marginLeft: 15, fontSize: 13.5, color:"#ADADAD", textTransform: 'uppercase'}}>{this.state.searchHistory}</Text>
-                    </View>
-                </View>
+                </TouchableOpacity>
                 :
                 <></>
             }

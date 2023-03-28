@@ -6,6 +6,6 @@ headers: {
 
 YAHOO FINANCE
 headers: {
-    'X-RapidAPI-Key': 'fda68741aamshbc802fc48d29613p1c42d9jsn437ceffc7a8e',
+    'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
     'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com'
-}
+  }

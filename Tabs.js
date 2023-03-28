@@ -13,6 +13,9 @@ import Dashboard from './src/pages/Dashboard';
 import Search from './src/pages/Search';
 import Watchlist from './src/pages/Watchlist';
 import Account from './src/pages/Account';
+import Stock from './src/pages/Stock';
+import BuySell from './src/pages/BuySell';
+import Portfolio from './src/pages/Portfolio';
 
 
 const Tab = createBottomTabNavigator();
@@ -20,6 +23,7 @@ const Tab = createBottomTabNavigator();
 const DashboardStack = createStackNavigator();
 const WatchlistStack = createStackNavigator();
 const AccountStack = createStackNavigator();
+const PortfolioStack = createStackNavigator();
 
 
 const DashboardStackScreen = ({navigation}) => {
@@ -33,6 +37,16 @@ const DashboardStackScreen = ({navigation}) => {
         <DashboardStack.Screen
           name="Search"
           component={Search}
+          options={{headerShown: false}}
+        />
+        <DashboardStack.Screen
+          name="Stock"
+          component={Stock}
+          options={{headerShown: false}}
+        />
+         <DashboardStack.Screen
+          name="BuySell"
+          component={BuySell}
           options={{headerShown: false}}
         />
     </DashboardStack.Navigator>
@@ -61,6 +75,17 @@ const WatchlistStackScreen = ({navigation}) => {
         />
       </WatchlistStack.Navigator>
     );
+};
+const PortfolioStackScreen = ({navigation}) => {
+  return (
+    <PortfolioStack.Navigator initialRouteName='Dashboard'>
+        <PortfolioStack.Screen
+          name="Portfolio"
+          component={Portfolio}
+          options={{headerShown: false}}
+        />
+      </PortfolioStack.Navigator>
+  );
 };
 const AccountStackScreen = ({navigation}) => {
   return (
@@ -97,7 +122,7 @@ const Tabs = () => {
           keyboardHidesTabBar: true,
           style: {
             height: 66,
-            backgroundColor: '#E7E7E7',
+            backgroundColor: '#fff',
             width: "100%", paddingTop: 5, alignItems:"center"
           },
         }}>
@@ -107,7 +132,7 @@ const Tabs = () => {
             options={({navigation}) => ({
                 tabBarIcon: ({focused}) =>
                   focused ? (
-                    <View style={{alignItems:"center", backgroundColor:"#0a77e8", padding: 11, borderRadius: 100, marginTop: -3}}>
+                    <View style={{alignItems:"center", backgroundColor:"#1dcc98", padding: 11, borderRadius: 100, marginTop: -3}}>
                       <Image source={require("./assets/dashboard_white.png")} style={{height: 23, width: 23}} />
                     </View>
                   ) : (
@@ -124,7 +149,7 @@ const Tabs = () => {
             options={({navigation}) => ({
                 tabBarIcon: ({focused}) =>
                   focused ? (
-                    <View style={{alignItems:"center", backgroundColor:"#0a77e8", padding: 11, borderRadius: 100, marginTop: -3,}}>
+                    <View style={{alignItems:"center", backgroundColor:"#1dcc98", padding: 11, borderRadius: 100, marginTop: -3,}}>
                       <Image source={require("./assets/bookmark_white.png")} style={{height: 23, width: 23}} />
                     </View>
                   ) : (
@@ -137,11 +162,11 @@ const Tabs = () => {
           />
           <Tab.Screen
             name="Portfolio"
-            component={AccountStackScreen}
+            component={PortfolioStackScreen}
             options={({navigation}) => ({
                 tabBarIcon: ({focused}) =>
                   focused ? (
-                    <View style={{alignItems:"center", backgroundColor:"#0a77e8", padding: 11, borderRadius: 100, marginTop: -3,}}>
+                    <View style={{alignItems:"center", backgroundColor:"#1dcc98", padding: 11, borderRadius: 100, marginTop: -3,}}>
                       <Image source={require("./assets/portfolio_white.png")} style={{height: 23, width: 23}} />
                     </View>
                   ) : (
@@ -158,13 +183,13 @@ const Tabs = () => {
             options={({navigation}) => ({
                 tabBarIcon: ({focused}) =>
                   focused ? (
-                    <View style={{alignItems:"center", backgroundColor:"#0a77e8", padding: 11, borderRadius: 100, marginTop: -3,}}>
+                    <View style={{alignItems:"center", backgroundColor:"#1dcc98", padding: 11, borderRadius: 100, marginTop: -3,}}>
                       <Image source={require("./assets/book_white.png")} style={{height: 23, width: 23}} />
                     </View>
                   ) : (
                     <View style={{alignItems:"center"}}>
                        <Image source={require("./assets/book.png")} style={{height: 24, width: 24}} />
-                      <Text style={{color:"#222", fontSize: 12, marginTop: 5}}>Portfolio</Text>
+                      <Text style={{color:"#222", fontSize: 12, marginTop: 5}}>Transactions</Text>
                     </View>
                   ),
               })}
@@ -175,13 +200,13 @@ const Tabs = () => {
             options={({navigation}) => ({
                 tabBarIcon: ({focused}) =>
                   focused ? (
-                    <View style={{alignItems:"center", backgroundColor:"#0a77e8", padding: 11, borderRadius: 100, marginTop: -3,}}>
+                    <View style={{alignItems:"center", backgroundColor:"#1dcc98", padding: 11, borderRadius: 100, marginTop: -3,}}>
                       <Image source={require("./assets/user_white.png")} style={{height: 23, width: 23}} />
                     </View>
                   ) : (
                     <View style={{alignItems:"center"}}>
                        <Image source={require("./assets/user.png")} style={{height: 24, width: 24}} />
-                      <Text style={{color:"#222", fontSize: 12, marginTop: 5}}>Portfolio</Text>
+                      <Text style={{color:"#222", fontSize: 12, marginTop: 5}}>Account</Text>
                     </View>
                   ),
               })}

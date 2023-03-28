@@ -11,7 +11,7 @@ export default class Account extends Component {
     };
   }
   async componentDidMount(){
-    NavigationBar.setBackgroundColorAsync("#E7E7E7");
+    NavigationBar.setBackgroundColorAsync("#fff");
     NavigationBar.setButtonStyleAsync("dark");
   }
   render() {
