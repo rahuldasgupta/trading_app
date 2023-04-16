@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, useWindowDimensions, Text, StyleSheet, RefreshControl, TouchableOpacity} from 'react-native';
+import { View, useWindowDimensions, Text, StyleSheet, Image, RefreshControl, TouchableOpacity} from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
 import { useNavigation } from '@react-navigation/native';
 import { Feather, AntDesign } from '@expo/vector-icons';
@@ -66,22 +66,30 @@ const FirstRoute = () => {
           </View>
         </TouchableOpacity>
         <View>
-            {
-              watchlist.map((item, key) =>(
-               <TouchableOpacity onPress={()=> navigation.navigate("Stock", {stockName: item.name, symbol: item.symbol})}>
-                  <View key={key}>
-                    <View style={{margin:"7.5%", marginTop: "0%", marginBottom:"4%", justifyContent:"space-between", flexDirection:"row", alignItems:"center"}}>
-                      <View>
-                        <Text style={{fontFamily:"Lato-Bold", fontSize: 16}}>{item.name}</Text>
-                        <Text style={{textAlign:"left", fontSize: 13.5, marginTop:4, fontFamily:"Lato-Regular", color:"#777777"}}>{item.symbol}</Text>
+          {
+            watchlist.length > 0 ?
+            <>
+              {
+                watchlist.map((item, key) =>(
+                <TouchableOpacity onPress={()=> navigation.navigate("Stock", {stockName: item.name, symbol: item.symbol})}>
+                    <View key={key}>
+                      <View style={{margin:"7.5%", marginTop: "0%", marginBottom:"4%", justifyContent:"space-between", flexDirection:"row", alignItems:"center"}}>
+                        <View>
+                          <Text style={{fontFamily:"Lato-Bold", fontSize: 16}}>{item.name}</Text>
+                          <Text style={{textAlign:"left", fontSize: 13.5, marginTop:4, fontFamily:"Lato-Regular", color:"#777777"}}>{item.symbol}</Text>
+                        </View>
+                        <Text style={{textAlign:"right", fontFamily:"Lato-Bold",}}>₹{item.price}</Text>
                       </View>
-                      <Text style={{textAlign:"right", fontFamily:"Lato-Bold",}}>₹{item.price}</Text>
+                      <Divider style={{height: 0.4, backgroundColor: '#ADADAD', marginBottom:"4%",}}/>
                     </View>
-                    <Divider style={{height: 0.4, backgroundColor: '#ADADAD', marginBottom:"4%",}}/>
-                  </View>
-               </TouchableOpacity>
-              ))
-            }
+                </TouchableOpacity>
+                ))
+              }
+            </>
+            :
+            <Image source={require("../../assets/Empty.gif")} style={{height: 300, marginTop:"5%", width: 300, alignItems:"center", alignSelf:"center"}}/>
+          }
+            
         </View>
       </ScrollView>
      

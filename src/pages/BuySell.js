@@ -197,7 +197,7 @@ export default class BuySell extends Component {
             let totalQuantity = Number(oldQuantity) - Number(this.state.quantity)
             let total = totalOld-totalNew
             let newAverage = Number(total)/totalQuantity
-            if(newAverage==0 || newAverage != NaN){
+            if(totalQuantity==0 || newAverage == NaN){
                 newAverage = 0
             }
 

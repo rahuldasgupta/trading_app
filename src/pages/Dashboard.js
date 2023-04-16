@@ -112,7 +112,7 @@ export default class Dashboard extends Component {
     const options = {
       method: 'GET',
       headers: {
-        'X-RapidAPI-Key': '8d1791afb6msh5cda3019aedbb08p1e849cjsnf38e83dc6b8a',
+        'X-RapidAPI-Key': 'c4357b3942mshb8900c396dcdafep15c6adjsnee149812ad20',
         'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
       }
     };
@@ -155,7 +155,6 @@ export default class Dashboard extends Component {
       .then((responseJson) => {
         if(responseJson === null){}
         else{
-          console.log(responseJson.top_mover)
           this.setState({
             topGainersFinal: responseJson.top_gainners,
             topLosersFinal: responseJson.top_losers,
@@ -228,7 +227,7 @@ export default class Dashboard extends Component {
                           <>
                             {
                               this.state.NiftyDifference >= 0 ?
-                                <View style={{width: "43%", backgroundColor:"#1dcc98", borderRadius: 10, padding: 10, paddingLeft: 15, paddingRight:15, marginRight: "3%"}}>
+                                <View key={key} style={{width: "43%", backgroundColor:"#1dcc98", borderRadius: 10, padding: 10, paddingLeft: 15, paddingRight:15, marginRight: "3%"}}>
                                   <Text style={{fontSize: 14, fontWeight:"bold"}}>{item[0].shortName}</Text>
                                   <View style={{flexDirection:"row", marginTop: 1}}>
                                     <Text style={{marginRight: 6}}>{formattedNiftyCurrent}</Text>
@@ -296,7 +295,7 @@ export default class Dashboard extends Component {
                         {
                           item.name && item.price ? 
                             <TouchableWithoutFeedback onPress={() => this.handleNavigation(item.name, item.symbol)}>
-                              <View style={key == 0 ? styles.firstTabBox : styles.tabBox}>
+                              <View key={key} style={key == 0 ? styles.firstTabBox : styles.tabBox}>
                                 <Text style={{fontFamily:"Lato-Bold", marginTop: 5, textTransform: 'capitalize'}}>{item.name}</Text>
                                 <View style={{flexDirection:"row", marginTop: 3,}}>
                                   <Text style={{marginRight: 6, color:"#1dcc98"}}>₹{item.price}</Text>
@@ -321,7 +320,7 @@ export default class Dashboard extends Component {
                       {
                         item.name && item.price ? 
                           <TouchableWithoutFeedback onPress={() => this.handleNavigation(item.name, item.symbol)}>
-                            <View style={key == 0 ? styles.firstTabBox : styles.tabBox}>
+                            <View key={key} style={key == 0 ? styles.firstTabBox : styles.tabBox}>
                               <Text style={{fontFamily:"Lato-Bold", marginTop: 5, textTransform: 'capitalize'}}>{item.name}</Text>
                               <View style={{flexDirection:"row", marginTop: 3,}}>
                                 <Text style={{marginRight: 6, color:"#da540d"}}>₹{item.price}</Text>
@@ -337,13 +336,13 @@ export default class Dashboard extends Component {
                 }
               </ScrollView>
             </View>
-            <View style={{marginTop: "6%", marginBottom: 55}}>
+            <View style={{marginTop: "6%", marginBottom: 60}}>
               <Text style={{fontSize: 17.5,  color:"#03314b", fontFamily:"Lato-Bold", marginLeft:"5.5%",}}>Most Actively Traded</Text>
               <ScrollView showsHorizontalScrollIndicator={false} horizontal={true} style={{marginTop:"3%"}}>
                 {
                   this.state.topMoversFinal.map((item, key) =>(
                     <TouchableWithoutFeedback onPress={() => this.handleNavigation(item.name,item.symbol)}>
-                      <View style={key == 0 ? styles.firstTabBox : styles.tabBox}>
+                      <View key={key} style={key == 0 ? styles.firstTabBox : styles.tabBox}>
                         <Text style={{fontFamily:"Lato-Bold", marginTop: 5, textTransform: 'capitalize'}}>{item.name}</Text>
                         <View style={{flexDirection:"row", marginTop: 3,}}>
                           <Text style={{marginRight: 6, color:"#222"}}>₹{item.price}</Text>

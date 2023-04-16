@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Text, View, TouchableOpacity } from "react-native";
+import { Text, View, TouchableOpacity, Image } from "react-native";
 import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import {
@@ -60,6 +60,7 @@ export default class Transactions extends Component {
             transactions: data.transactions
         })
     });
+    console.log(this.state.transactions.length)
   }
   render() {
     return (
@@ -113,11 +114,14 @@ export default class Transactions extends Component {
                             }
                         </>
                         :
-                        <></>
+                        <>
+                            <Image source={require("../../assets/Empty.gif")} style={{height: 300, marginTop:"12%", width: 300, alignItems:"center", alignSelf:"center"}}/>
+                        </>
                     }
                 </>
                 :
-                <></>
+                <>
+                </>
             }
             {
                 this.state.currentView === "Buy" ?
@@ -162,7 +166,9 @@ export default class Transactions extends Component {
                             }
                         </>
                         :
-                        <></>
+                        <>
+                            <Image source={require("../../assets/Empty.gif")} style={{height: 300, marginTop:"12%", width: 300, alignItems:"center", alignSelf:"center"}}/>
+                        </>
                     }
                 </>
                 :
@@ -211,7 +217,9 @@ export default class Transactions extends Component {
                             }
                         </>
                         :
-                        <></>
+                        <>
+                            <Image source={require("../../assets/Empty.gif")} style={{height: 300, marginTop:"12%", width: 300, alignItems:"center", alignSelf:"center"}}/>
+                        </>
                     }
                 </>
                 :

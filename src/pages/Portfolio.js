@@ -100,7 +100,7 @@ export default class Portfolio extends Component {
         const options = {
           method: 'GET',
           headers: {
-            'X-RapidAPI-Key': '8d1791afb6msh5cda3019aedbb08p1e849cjsnf38e83dc6b8a',
+            'X-RapidAPI-Key': 'c4357b3942mshb8900c396dcdafep15c6adjsnee149812ad20',
             'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com'
           }
         };
@@ -195,32 +195,40 @@ export default class Portfolio extends Component {
               </View>
             </View>
             <View style={{ marginTop: "2%"}}>
-                {
-                    this.state.stocksData.map((item, key) =>(
-                        <>
-                            <TouchableOpacity  onPress={() => this.handleNavigation(item.name, item.symbol)}>
-                              <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginLeft:"7%", marginRight:"7%"}}>
-                                  <View>
-                                      <Text style={{fontSize: 17, fontWeight:"bold", color:"#03314b", marginBottom: 3}}>{item.name}</Text>
-                                      <Text style={{fontSize: 14, color:"#03314b"}}>{item.quantity} Shares @ ₹{item.averagePrice}</Text>
-                                  </View>
-                                  {
-                                    item.currentPrice ?
-                                      <View>
-                                          <Text style={{fontSize: 16, fontWeight:"bold", color:(Number(item.quantity)*Number(item.currentPrice))-(Number(item.quantity)*Number(item.averagePrice)) > 0 ? "#1dcc98" : "#da540d", marginBottom: 3}}>{((Number(item.quantity)*Number(item.currentPrice))-(Number(item.quantity)*Number(item.averagePrice))).toFixed(1)}</Text>
-                                      </View>
-                                      :
-                                      <View>
-                                        <Text style={{fontSize: 16, fontWeight:"bold", color:"#1dcc98", marginBottom: 3}}>0.00</Text>
+              {
+                this.state.stocksData.length > 0 ?
+                <>
+                  {
+                      this.state.stocksData.map((item, key) =>(
+                          <>
+                              <TouchableOpacity  onPress={() => this.handleNavigation(item.name, item.symbol)}>
+                                <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginLeft:"7%", marginRight:"7%"}}>
+                                    <View>
+                                        <Text style={{fontSize: 17, fontWeight:"bold", color:"#03314b", marginBottom: 3}}>{item.name}</Text>
+                                        <Text style={{fontSize: 14, color:"#03314b"}}>{item.quantity} Shares @ ₹{item.averagePrice}</Text>
                                     </View>
-                                  }
-                                  
-                              </View>
-                            </TouchableOpacity>
-                            <Divider style={{height: 0.8, backgroundColor: '#E2E2E2',  marginTop:12.5, marginBottom: 12.5}}/>
-                        </>
-                    ))
-                }
+                                    {
+                                      item.currentPrice ?
+                                        <View>
+                                            <Text style={{fontSize: 16, fontWeight:"bold", color:(Number(item.quantity)*Number(item.currentPrice))-(Number(item.quantity)*Number(item.averagePrice)) >= 0 ? "#1dcc98" : "#da540d", marginBottom: 3}}>{((Number(item.quantity)*Number(item.currentPrice))-(Number(item.quantity)*Number(item.averagePrice))).toFixed(1)}</Text>
+                                        </View>
+                                        :
+                                        <View>
+                                          <Text style={{fontSize: 16, fontWeight:"bold", color:"#1dcc98", marginBottom: 3}}>0.00</Text>
+                                      </View>
+                                    }
+                                    
+                                </View>
+                              </TouchableOpacity>
+                              <Divider style={{height: 0.8, backgroundColor: '#E2E2E2',  marginTop:12.5, marginBottom: 12.5}}/>
+                          </>
+                      ))
+                  }
+                </>
+                :
+                <Image source={require("../../assets/Empty.gif")} style={{height: 300, marginTop:"5%", width: 300, alignItems:"center", alignSelf:"center"}}/>
+              }
+                
               </View>
         </ScrollView>
       </View>

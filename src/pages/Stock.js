@@ -106,7 +106,7 @@ export default class Stock extends Component {
     const options = {
         method: 'GET',
         headers: {
-            'X-RapidAPI-Key': '8d1791afb6msh5cda3019aedbb08p1e849cjsnf38e83dc6b8a',
+            'X-RapidAPI-Key': 'c4357b3942mshb8900c396dcdafep15c6adjsnee149812ad20',
             'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
         }
     };
@@ -144,7 +144,7 @@ export default class Stock extends Component {
     const options = {
         method: 'GET',
         headers: {
-            'X-RapidAPI-Key': '8d1791afb6msh5cda3019aedbb08p1e849cjsnf38e83dc6b8a',
+            'X-RapidAPI-Key': 'c4357b3942mshb8900c396dcdafep15c6adjsnee149812ad20',
             'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
         }
     };
@@ -239,10 +239,11 @@ export default class Stock extends Component {
     const options = {
         method: 'GET',
         headers: {
-            'X-RapidAPI-Key': '8d1791afb6msh5cda3019aedbb08p1e849cjsnf38e83dc6b8a',
+            'X-RapidAPI-Key': 'c4357b3942mshb8900c396dcdafep15c6adjsnee149812ad20',
             'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com'
         }
     };
+    
 
     await fetch('https://yahoo-finance15.p.rapidapi.com/api/yahoo/mo/module/' + symbol +'?module=financial-data%2Cdefault-key-statistics%2Cinsider-holders%2Casset-profile%2Cincome-statement', options)
         .then(response => response.json())
