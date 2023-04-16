@@ -34,13 +34,15 @@ export default class Dashboard extends Component {
       email: "",
       photoURL: "https://firebasestorage.googleapis.com/v0/b/wigglycherry-5443a.appspot.com/o/user_img.png?alt=media&token=8c3e3154-07b8-492e-bb1d-f3ce77d52eed",
       indexArray: [],
+      totalInvested: 0,
       NiftyDifference: 127,
       SensexDifference: 234,
+      NiftyCurrent: 0,
+      SensexCurrent: 0,
 
-      topGainers: [],
-      topLosers: [],
       topGainersFinal: [],
       topLosersFinal: [],
+      topMoversFinal: [],
       loaderModal: true,
       refreshing: false
     };
@@ -51,10 +53,16 @@ export default class Dashboard extends Component {
     NavigationBar.setButtonStyleAsync("dark");
 
     this.getIndexData();
-    this.getMarketMovers()
+    this.getUserData();
+    this.marketMovers();
 
+    this.focusListener = this.props.navigation.addListener('focus', () => {
+      this.getUserData()
+    });
+  }
+  getUserData = async() => {
     auth.onAuthStateChanged((user) => {
-      if (user) {
+      if(user) {
         this.setState({
           userData: user,
           email: user.email
@@ -78,223 +86,100 @@ export default class Dashboard extends Component {
             photoURL: data.photoURL,
         })
     });
+    this.checkPortfolio(data.stocksOwned)
   }
-  handleNavigation = (symbol) => {
-    this.props.navigation.navigate("Stock", {symbol: symbol})
+  handleNavigation = (name, symbol) => {
+    this.props.navigation.navigate("Stock", {stockName: name, symbol: symbol})
+  }
+  checkPortfolio = (stockArr) => {
+    let totalInvested = 0
+    for(let i=0; i<stockArr.length; i++){
+      let quantity = Number(stockArr[i].quantity)
+      let averagePrice = Number(stockArr[i].averagePrice)
+      let totalPrice = quantity*averagePrice
+      totalInvested = totalInvested + Number(totalPrice)
+    }
+    this.setState({totalInvested})
   }
   getIndexData = async() => {
-    const options = {
+    /*const options = {
       method: 'GET',
       headers: {
         'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
         'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
       }
+    };*/
+    const options = {
+      method: 'GET',
+      headers: {
+        'X-RapidAPI-Key': '8d1791afb6msh5cda3019aedbb08p1e849cjsnf38e83dc6b8a',
+        'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
+      }
     };
     
-    fetch('https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-summary?region=IN', options)
+    await fetch('https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-summary?region=IN', options)
       .then(response => response.json())
       .then((response) => {
         let emptyIndexArray = []
 
         let NSE = response.marketSummaryAndSparkResponse.result.filter(item => item.shortName === "Nifty 50");
-        let NSEOlddData = NSE[0].spark.close[0]
-        let NSEDifference = Number(NSE[0].regularMarketPreviousClose.raw) - Number(NSEOlddData)
+        let sparkLengthNifty = NSE[0].spark.close.length
+        let NSEOlddData = NSE[0].spark.close[sparkLengthNifty-1]
+        let NSEDifference =  Number(NSEOlddData) - Number(NSE[0].regularMarketPreviousClose.raw)
         let NiftyRounded = Math.floor(NSEDifference);
         emptyIndexArray.push(NSE)
 
         let BSE = response.marketSummaryAndSparkResponse.result.filter(item => item.shortName === "BSE SENSEX");
-        let BSEOlddData = BSE[0].spark.close[0]
-        let BSEDifference = Number(BSE[0].regularMarketPreviousClose.raw) - Number(BSEOlddData)
+        let sparkLengthSensex = BSE[0].spark.close.length
+        let BSEOlddData = BSE[0].spark.close[sparkLengthSensex-1]
+        let BSEDifference = Number(BSEOlddData) - Number(BSE[0].regularMarketPreviousClose.raw)
         let SensexRounded = Math.floor(BSEDifference);
         emptyIndexArray.push(BSE)
 
         this.setState({
           indexArray: emptyIndexArray,
+          NiftyCurrent: NSEOlddData,
+          SensexCurrent: BSEOlddData,
           NiftyDifference: NiftyRounded,
-          SensexDifference: SensexRounded
+          SensexDifference: SensexRounded,
+          loaderModal: false,
         })
       })
       .catch(err => console.error("INDEX ERROR ==>", err));
   }
-  getMarketMovers = async() => {
-    const options = {
+  marketMovers = async() => {
+    await fetch(`https://5h186oqc0c.execute-api.ap-south-1.amazonaws.com/dev/top_gainer/get_topgainer`, {
       method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
-        'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
-      }
-    };
-    
-    fetch('https://apidojo-yahoo-finance-v1.p.rapidapi.com/market/v2/get-movers?region=IN&lang=en-US&start=0&count=10', options)
-      .then(response => response.json())
-      .then((response) => {
-        let emptyGainersArray = [];
-        let emptyLosersArray = [];
-        let gainersResponse = response.finance.result[0].quotes;
-        for (let i = 0; i < gainersResponse.length; i++) {
-          emptyGainersArray.push(gainersResponse[i].symbol)
+    })
+      .then((response) => response.json())
+      .then((responseJson) => {
+        if(responseJson === null){}
+        else{
+          console.log(responseJson.top_mover)
+          this.setState({
+            topGainersFinal: responseJson.top_gainners,
+            topLosersFinal: responseJson.top_losers,
+            topMoversFinal: responseJson.top_mover,
+            loaderModal: false,
+            refreshing: false
+          })
         }
-        
-        let losersResponse = response.finance.result[1].quotes;
-        for (let i = 0; i < losersResponse.length; i++) {
-          emptyLosersArray.push(losersResponse[i].symbol)
-        }
-
-        let gainersSorted = emptyGainersArray.filter(item => !item.includes("-"));
-        gainersSorted = gainersSorted.filter(item => item.includes(".BO"));
-        let losersSorted = emptyLosersArray.filter(item => !item.includes("-"));
-        losersSorted = losersSorted.filter(item => item.includes(".BO"));
-
-        console.log("TOP GAINERS ==>", gainersSorted)
-        this.setState({
-          topGainers: gainersSorted,
-          topLosers: losersSorted
-        })
-        this.renderTopGainers();
-        this.renderLosersGainers()
       })
-      .catch(err => console.error(err));
-  }
-  renderTopGainers = async() => {
-    let finalData = []
-    let topGainers = this.state.topGainers
-    let stockName = []
-    let stockPrice = []
-    let deleteArray = []
-
-    const options = {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
-        'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com'
-      }
-    };
-
-    const options2 = {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
-        'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
-      }
-    };
-
-    for (let i = 0; i < topGainers.length; i++) {
-      let url = 'https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote/'+ topGainers[i] +'/financial-data'
-      console.log(url)
-      await fetch(url, options)
-        .then(response => response.json())
-        .then((response) => {
-          if(response.financialData.currentPrice.raw){
-            stockPrice.push(response.financialData.currentPrice.raw)
-          }
-          else{
-            deleteArray.push(i);
-          }
-        })
-        .catch((err) => {
-          deleteArray.push(i);
-        });
-    }
-    for(let j = 0; j < deleteArray.length; j++){
-      topGainers.splice(deleteArray[j], 1);
-    }
-    for(let k = 0; k < topGainers.length; k++){
-      await fetch('https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary?symbol=' + topGainers[k] +'&region=IN', options2)
-        .then(response => response.json())
-        .then((response) => {
-          stockName.push(response.quoteType.shortName)
-        })
-        .catch(err => console.error(err));
-    }
-    for(let l = 0; l < topGainers.length; l++){
-      let symbol = topGainers[l];
-      let price = stockPrice[l]
-      let name = stockName[l];
-
-      finalData.push(
-        {
-          "symbol": symbol,
-          "price": price,
-          "name" : name
-        }
-      )
-    }
-    console.log("FINAL DATA ===> ", finalData)
-    this.setState({
-      topGainersFinal: finalData
-    })
-  }
-  renderLosersGainers = async() => {
-    let finalData = []
-    let topLosers = this.state.topLosers
-    let stockName = []
-    let stockPrice = []
-    let deleteArray = []
-
-    const options = {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
-        'X-RapidAPI-Host': 'yahoo-finance15.p.rapidapi.com'
-      }
-    };
-
-    const options2 = {
-      method: 'GET',
-      headers: {
-        'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
-        'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
-      }
-    };
-
-    for (let i = 0; i < topLosers.length; i++) {
-      let url = 'https://yahoo-finance15.p.rapidapi.com/api/yahoo/qu/quote/'+ topLosers[i] +'/financial-data'
-      console.log(url)
-      await fetch(url, options)
-        .then(response => response.json())
-        .then((response) => {
-          stockPrice.push(response.financialData.currentPrice.raw)
-        })
-        .catch((err) => {
-          deleteArray.push(i);
-        });
-    }
-    for(let j = 0; j < deleteArray.length; j++){
-      topLosers.splice(deleteArray[j], 1);
-    }
-    for(let k = 0; k < topLosers.length; k++){
-      await fetch('https://apidojo-yahoo-finance-v1.p.rapidapi.com/stock/v2/get-summary?symbol=' + topLosers[k] +'&region=IN', options2)
-        .then(response => response.json())
-        .then((response) => {
-          stockName.push(response.quoteType.shortName)
-        })
-        .catch(err => console.error(err));
-    }
-    for(let l = 0; l < topLosers.length; l++){
-      let symbol = topLosers[l];
-      let price = stockPrice[l]
-      let name = stockName[l];
-
-      finalData.push(
-        {
-          "symbol": symbol,
-          "price": price,
-          "name" : name
-        }
-      )
-    }
-    console.log("FINAL DATA ===> ", finalData)
-    this.setState({
-      topLosersFinal: finalData,
-      loaderModal: false,
-      refreshing: false
-    })
+      .catch((error) => {
+          console.error(error);
+      });
   }
   _onRefresh = () => {
     this.setState({refreshing: true});
     this.componentDidMount()
   }
   render() {
+    let NiftyCurrent = this.state.NiftyCurrent;
+    let totalInvested = this.state.totalInvested;
+    let SensexCurrent = this.state.SensexCurrent
+    const formattedInvestment = totalInvested.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    const formattedNiftyCurrent = NiftyCurrent.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    const formattedSensexCurrent = SensexCurrent.toLocaleString('en-IN', { maximumFractionDigits: 2 });
     return (
       <View style={{flex: 1, backgroundColor:"#fff", marginTop: Constants.statusBarHeight, minHeight: windowHeight}}>
         <StatusBar backgroundColor={"#fff"} style="dark" />
@@ -303,8 +188,8 @@ export default class Dashboard extends Component {
               <ActivityIndicator size="large" color="#fff" />
             </View>
         </Modal>
-        <View style={{margin: "5%", marginRight: 0}}>
-          <ScrollView horizontal={false} showsVerticalScrollIndicator={false} style={{marginBottom: 65}}
+        <View style={{margin: "5%", marginRight: 0, marginLeft: 0}}>
+          <ScrollView horizontal={false} showsVerticalScrollIndicator={false}
               refreshControl={
                 <RefreshControl
                     refreshing={this.state.refreshing}
@@ -312,7 +197,7 @@ export default class Dashboard extends Component {
                 />
               }
           >
-            <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginRight:"5%"}}>
+            <View style={{flexDirection:"row", justifyContent:"space-between", alignItems:"center", marginLeft:"5%", marginRight:"5%"}}>
               <View style={{alignItems:"center", flexDirection:"row"}}>
                 <Image source={{ uri: this.state.photoURL}} style={{height: 45, width: 45, borderRadius: 45/2}}/>
                 <View>
@@ -327,14 +212,14 @@ export default class Dashboard extends Component {
                 <Ionicons name="notifications-outline" size={24} color="#03314b" />
               </View>
             </View>
-            <View style={{backgroundColor:"#03314b", width:"95%", borderRadius: 25, marginTop:"5%", padding:"5%", paddingTop:"7%", marginRight:"5%"}}>
+            <View style={{backgroundColor:"#03314b", width:"90%", borderRadius: 25, marginTop:"5%", padding:"5%", paddingTop:"7%", marginLeft:"5%", marginRight:"5%"}}>
               <Text style={{color:"#fff", fontFamily:"Lato-Regular", opacity: 0.7}}>Portfolio</Text>
-              <Text style={{color:"#fff", fontFamily:"Lato-Regular", fontSize: 40}}>₹21,253.00</Text>
+              <Text style={{color:"#fff", fontFamily:"Lato-Regular", fontSize: 40}}>₹{formattedInvestment}</Text>
               <View style={{paddingTop: 10, paddingBottom: 10, backgroundColor:"#1ecb98", width: 138, marginTop: 15, borderRadius: 7}}>
                 <Text style={{color:"#fff", fontFamily:"Lato-Regular",textAlign:"center"}}>Add Demo Money</Text>
               </View>
             </View>
-            <View style={{marginTop: "5%", flexDirection:"row"}}>
+            <View style={{marginTop: "5%", marginLeft:"5%", flexDirection:"row"}}>
               {
                   this.state.indexArray.map((item, key) =>(
                       <>
@@ -346,18 +231,24 @@ export default class Dashboard extends Component {
                                 <View style={{width: "43%", backgroundColor:"#1dcc98", borderRadius: 10, padding: 10, paddingLeft: 15, paddingRight:15, marginRight: "3%"}}>
                                   <Text style={{fontSize: 14, fontWeight:"bold"}}>{item[0].shortName}</Text>
                                   <View style={{flexDirection:"row", marginTop: 1}}>
-                                    <Text style={{marginRight: 6}}>{item[0].regularMarketPreviousClose.fmt}</Text>
-                                    <AntDesign name="caretup" size={17} color="#fff" style={{marginTop: 3}}/>
-                                    <Text style={{marginLeft: 2, color:"#fff", fontSize: 12, marginTop: 2}}>{this.state.NiftyDifference}</Text>
+                                    <Text style={{marginRight: 6}}>{formattedNiftyCurrent}</Text>
+                                    <AntDesign name="caretup" size={17} color="#fff" style={{marginTop: 4}}/>
+                                    <Text style={{marginLeft: 2, color:"#fff", fontSize: 12, marginTop: 3}}>{this.state.NiftyDifference}</Text>
+                                    <Text style={{marginLeft: 2, color:"#fff", fontSize: 12, marginTop: 3}}>
+                                      ({((this.state.NiftyDifference/this.state.NiftyCurrent)*100).toFixed(2)}%)
+                                    </Text>
                                   </View>
                                 </View>
                               :
                                 <View style={{width: "43%", backgroundColor:"#B22222", borderRadius: 10, padding: 10, paddingLeft: 15, paddingRight:15, marginRight: "3%"}}>
                                     <Text style={{fontSize: 14, fontWeight:"bold", color:"#fff"}}>{item[0].shortName}</Text>
                                   <View style={{flexDirection:"row", alignItems:"center"}}>
-                                    <Text style={{marginRight: 6, color:"#fff"}}>{item[0].regularMarketPreviousClose.fmt}</Text>
+                                    <Text style={{marginRight: 6, color:"#fff"}}>{formattedNiftyCurrent}</Text>
                                     <AntDesign name="caretdown" size={17} color="#fff" style={{marginTop: -3}}/>
                                     <Text style={{marginLeft: 2, color:"#fff", fontSize: 12}}>{this.state.NiftyDifference}</Text>
+                                    <Text style={{marginLeft: 2, color:"#fff", fontSize: 12}}>
+                                      ({((this.state.NiftyDifference/this.state.NiftyCurrent)*100).toFixed(2)}%)
+                                    </Text>
                                   </View>
                                 </View>
                             }
@@ -369,18 +260,24 @@ export default class Dashboard extends Component {
                                 <View style={{width: "43%", backgroundColor:"#1dcc98", borderRadius: 10, padding: 10, paddingLeft: 15, paddingRight:15, marginRight: "3%"}}>
                                   <Text style={{fontSize: 14, fontWeight:"bold"}}>{item[0].shortName}</Text>
                                   <View style={{flexDirection:"row", marginTop: 1}}>
-                                    <Text style={{marginRight: 6}}>{item[0].regularMarketPreviousClose.fmt}</Text>
-                                    <AntDesign name="caretup" size={17} color="#fff" style={{marginTop: 3}}/>
-                                    <Text style={{marginLeft: 2, color:"#fff", fontSize: 12, marginTop: 2}}>{this.state.SensexDifference}</Text>
+                                    <Text style={{marginRight: 6}}>{formattedSensexCurrent}</Text>
+                                    <AntDesign name="caretup" size={17} color="#fff" style={{marginTop: 4}}/>
+                                    <Text style={{marginLeft: 2, color:"#fff", fontSize: 12, marginTop: 3}}>{this.state.SensexDifference}</Text>
+                                    <Text style={{marginLeft: 2, color:"#fff", fontSize: 12, marginTop: 3}}>
+                                      ({((this.state.SensexDifference/this.state.SensexCurrent)*100).toFixed(2)}%)
+                                    </Text>
                                   </View>
                                 </View>
                               :
                                 <View style={{width: "43%", backgroundColor:"#B22222", borderRadius: 10, padding: 10, paddingLeft: 15, paddingRight:15, marginRight: "3%"}}>
                                     <Text style={{fontSize: 14, fontWeight:"bold", color:"#fff"}}>{item[0].shortName}</Text>
                                   <View style={{flexDirection:"row", alignItems:"center"}}>
-                                    <Text style={{marginRight: 6, color:"#fff"}}>{item[0].regularMarketPreviousClose.fmt}</Text>
+                                    <Text style={{marginRight: 6, color:"#fff"}}>{formattedSensexCurrent}</Text>
                                     <AntDesign name="caretdown" size={17} color="#fff" style={{marginTop: -3}}/>
                                     <Text style={{marginLeft: 2, color:"#fff", fontSize: 12}}>{this.state.SensexDifference}</Text>
+                                    <Text style={{marginLeft: 2, color:"#fff", fontSize: 12}}>
+                                      ({((this.state.SensexDifference/this.state.SensexCurrent)*100).toFixed(2)}%)
+                                    </Text>
                                   </View>
                                 </View>
                             }
@@ -390,20 +287,20 @@ export default class Dashboard extends Component {
                   ))
               }
             </View>
-            <View style={{marginTop: "6.5%"}}>
-              <Text style={{fontSize: 17.5, color:"#03314b", fontFamily:"Lato-Bold", marginLeft: 3}}>Top Gainers</Text>
+            <View style={{marginTop: "6%"}}>
+              <Text style={{fontSize: 17.5, color:"#03314b", fontFamily:"Lato-Bold", marginLeft:"5.5%"}}>Top Gainers</Text>
               <ScrollView showsHorizontalScrollIndicator={false} horizontal={true} style={{marginTop:"3%",}}>
                 {
                     this.state.topGainersFinal.map((item, key) =>(
                       <>
                         {
                           item.name && item.price ? 
-                            <TouchableWithoutFeedback onPress={() => this.handleNavigation(item.symbol)}>
-                              <View style={styles.tabBox}>
+                            <TouchableWithoutFeedback onPress={() => this.handleNavigation(item.name, item.symbol)}>
+                              <View style={key == 0 ? styles.firstTabBox : styles.tabBox}>
                                 <Text style={{fontFamily:"Lato-Bold", marginTop: 5, textTransform: 'capitalize'}}>{item.name}</Text>
                                 <View style={{flexDirection:"row", marginTop: 3,}}>
                                   <Text style={{marginRight: 6, color:"#1dcc98"}}>₹{item.price}</Text>
-                                  <AntDesign name="caretup" size={17} color="#1dcc98" style={{marginTop: 3}} />
+                                  <AntDesign name="caretup" size={17} color="#1dcc98" style={{marginTop: 4}} />
                                 </View>
                               </View>
                             </TouchableWithoutFeedback>
@@ -415,16 +312,16 @@ export default class Dashboard extends Component {
                 }
               </ScrollView>
             </View>
-            <View style={{marginTop: "6.5%"}}>
-              <Text style={{fontSize: 17.5,  color:"#03314b", fontFamily:"Lato-Bold", marginLeft: 3}}>Top Losers</Text>
+            <View style={{marginTop: "6%"}}>
+              <Text style={{fontSize: 17.5,  color:"#03314b", fontFamily:"Lato-Bold", marginLeft: "5.5%"}}>Top Losers</Text>
               <ScrollView showsHorizontalScrollIndicator={false} horizontal={true} style={{marginTop:"3%"}}>
                 {
                   this.state.topLosersFinal.map((item, key) =>(
                     <>
                       {
                         item.name && item.price ? 
-                          <TouchableWithoutFeedback onPress={() => this.handleNavigation(item.symbol)}>
-                            <View style={styles.tabBox}>
+                          <TouchableWithoutFeedback onPress={() => this.handleNavigation(item.name, item.symbol)}>
+                            <View style={key == 0 ? styles.firstTabBox : styles.tabBox}>
                               <Text style={{fontFamily:"Lato-Bold", marginTop: 5, textTransform: 'capitalize'}}>{item.name}</Text>
                               <View style={{flexDirection:"row", marginTop: 3,}}>
                                 <Text style={{marginRight: 6, color:"#da540d"}}>₹{item.price}</Text>
@@ -440,6 +337,24 @@ export default class Dashboard extends Component {
                 }
               </ScrollView>
             </View>
+            <View style={{marginTop: "6%", marginBottom: 55}}>
+              <Text style={{fontSize: 17.5,  color:"#03314b", fontFamily:"Lato-Bold", marginLeft:"5.5%",}}>Most Actively Traded</Text>
+              <ScrollView showsHorizontalScrollIndicator={false} horizontal={true} style={{marginTop:"3%"}}>
+                {
+                  this.state.topMoversFinal.map((item, key) =>(
+                    <TouchableWithoutFeedback onPress={() => this.handleNavigation(item.name,item.symbol)}>
+                      <View style={key == 0 ? styles.firstTabBox : styles.tabBox}>
+                        <Text style={{fontFamily:"Lato-Bold", marginTop: 5, textTransform: 'capitalize'}}>{item.name}</Text>
+                        <View style={{flexDirection:"row", marginTop: 3,}}>
+                          <Text style={{marginRight: 6, color:"#222"}}>₹{item.price}</Text>
+                          <Image source={require("../../assets/transfer.png")} style={{height: 17, width: 17, marginTop: 2}}/>
+                        </View>
+                      </View>
+                    </TouchableWithoutFeedback>
+                  ))
+                }
+              </ScrollView>
+            </View>
           </ScrollView>
         </View>
       </View>
@@ -448,10 +363,27 @@ export default class Dashboard extends Component {
 }
 const styles = StyleSheet.create({
   tabBox: {
-    width: 130, backgroundColor:"#fff", margin: 3, 
-    marginLeft: 2, borderRadius: 10, padding: 13, marginRight: 13, borderWidth: 0.6, borderColor:"#D0D0D0",
+    width: 140, backgroundColor:"#fff", margin: 3, 
+    marginLeft: 2, borderRadius: 10, padding: 13, marginRight: 12, borderTopWidth: 0.2, borderColor:"#D0D0D0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.20,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
-  oldTabBox:{
-    width: 130, borderWidth: 0.7, borderColor:"#B6B6B6", borderRadius: 10, padding: 13, marginRight: 13
+  firstTabBox:{
+    width: 140, backgroundColor:"#fff", margin: 3, 
+    marginLeft: 2, borderRadius: 10, padding: 13, marginLeft: 23, marginRight: 12, borderTopWidth: 0.2, borderColor:"#D0D0D0",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.20,
+    shadowRadius: 1.41,
+    elevation: 2,
   },
 })

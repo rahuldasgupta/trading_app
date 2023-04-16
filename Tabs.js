@@ -16,6 +16,7 @@ import Account from './src/pages/Account';
 import Stock from './src/pages/Stock';
 import BuySell from './src/pages/BuySell';
 import Portfolio from './src/pages/Portfolio';
+import Transactions from './src/pages/Transactions';
 
 
 const Tab = createBottomTabNavigator();
@@ -24,7 +25,7 @@ const DashboardStack = createStackNavigator();
 const WatchlistStack = createStackNavigator();
 const AccountStack = createStackNavigator();
 const PortfolioStack = createStackNavigator();
-
+const TransactionStack = createStackNavigator();
 
 const DashboardStackScreen = ({navigation}) => {
   return (
@@ -63,13 +64,14 @@ const WatchlistStackScreen = ({navigation}) => {
             headerStyle: {
               backgroundColor: '#fff',
               elevation: 5,
-              height: 85
+              height: 85,
             },
             headerTintColor: "#222",
             headerTitleStyle: {
-            marginLeft: 7,
-            textAlign: "left",
-            fontSize: 20,
+              marginLeft: 7,
+              textAlign: "left",
+              fontSize: 20,
+              fontFamily:"Lato-Regular",
             },
          })}
         />
@@ -111,7 +113,32 @@ const AccountStackScreen = ({navigation}) => {
       </AccountStack.Navigator>
   );
 };
-
+const TransactionStackScreen = ({navigation}) => {
+  return (
+    <TransactionStack.Navigator initialRouteName='Dashboard'>
+        <TransactionStack.Screen
+          name="Transactions"
+          component={Transactions}
+          options={() => ({
+            headerLeft: null,
+            headerStyle: {
+              backgroundColor: '#fff',
+              elevation: 5,
+              height: 85,
+              borderBottomWidth: 0.5
+            },
+            headerTintColor: "#222",
+            headerTitleStyle: {
+              marginLeft: 7,
+              textAlign: "left",
+              fontSize: 20,
+              fontFamily:"Lato-Regular",
+            },
+         })}
+        />
+      </TransactionStack.Navigator>
+  );
+};
 const Tabs = () => {
   return (
     <SafeAreaView style={{ flex: 1}}>
@@ -179,7 +206,7 @@ const Tabs = () => {
           />
           <Tab.Screen
             name="Orders"
-            component={AccountStackScreen}
+            component={TransactionStackScreen}
             options={({navigation}) => ({
                 tabBarIcon: ({focused}) =>
                   focused ? (

@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as NavigationBar from 'expo-navigation-bar';
 import Constants from 'expo-constants';
 import { Divider } from 'react-native-paper';
+import { AntDesign } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const windowHeight = Dimensions.get('window').height;
@@ -24,14 +25,16 @@ export default class Search extends Component {
         this.checkSearchHistory();
     }
     handleChangeText = (data) => {
+        if(data != "" || data != null){
+            this.getSearchData(data);
+            this.storeData(data);
+        }
         this.setState({
             searchText: data
         })
-        this.storeData(data);
-        this.getSearchData(data)
     }
     storeData = async (data) => {
-        await AsyncStorage.setItem('searchTerm', data);
+        AsyncStorage.setItem('searchTerm', data);
     };
     checkSearchHistory = async () => {
         let searchTerm = await AsyncStorage.getItem('searchTerm');
@@ -43,20 +46,24 @@ export default class Search extends Component {
         }
     }
     getSearchData = async(searchTerm) => {
-
-        //API DOJO
-        const options = {
+        /*const options = {
             method: 'GET',
             headers: {
                 'X-RapidAPI-Key': 'e038a9c906msh11247ea41cd789ap1bff88jsn4472fd13c7b9',
                 'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
             }
+        };*/
+        const options = {
+            method: 'GET',
+            headers: {
+                'X-RapidAPI-Key': '8d1791afb6msh5cda3019aedbb08p1e849cjsnf38e83dc6b8a',
+                'X-RapidAPI-Host': 'apidojo-yahoo-finance-v1.p.rapidapi.com'
+            }
         };
         
-        await fetch('https://apidojo-yahoo-finance-v1.p.rapidapi.com/auto-complete?q='+ searchTerm + '&region=IN', options)
+        fetch('https://apidojo-yahoo-finance-v1.p.rapidapi.com/auto-complete?q='+ searchTerm + '&region=IN', options)
             .then(response => response.json())
             .then((response) => {
-                console.log(response)
                 let dataSorted = []
                 dataSorted = response.quotes.filter(item => item.symbol.includes('.NS'));
                 console.log(dataSorted)
@@ -65,14 +72,14 @@ export default class Search extends Component {
             })
             .catch(err => console.error(err));
     }
-    handleNavigation = (symbol) => {
-        this.props.navigation.navigate("Stock", {symbol: symbol})
+    handleNavigation = (name, symbol) => {
+        this.props.navigation.navigate("Stock", {stockName: name, symbol: symbol})
     }
   render() {
     return (
       <View style={{flex: 1, backgroundColor:"#fff", marginTop: Constants.statusBarHeight, minHeight: windowHeight}}>
         <StatusBar backgroundColor={"#fff"} style="dark" />
-        <View style={{margin: "5%", flexDirection:"row", alignItems:"center"}}>
+        <View style={{margin: "5%", flexDirection:"row", alignItems:"center", justifyContent:"space-between"}}>
             <TouchableOpacity onPress={() => this.props.navigation.goBack(null)}>
                 <Image source={require("../../assets/back_arrow.png")} style={{height: 27, width: 27}}/>
             </TouchableOpacity>
@@ -90,6 +97,9 @@ export default class Search extends Component {
                 placeholderTextColor={"#9E9E9E"}
                 onChangeText={(e) =>  this.handleChangeText(e)}
             />
+            <TouchableOpacity onPress={() => this.handleChangeText("")}>
+                <AntDesign name="close" size={24} color="#222" />
+            </TouchableOpacity>
         </View>
         <Divider style={{height: 0.5, backgroundColor: '#ADADAD',  marginTop:0}}/>
         <View style={{margin: "5%"}}>
@@ -103,9 +113,9 @@ export default class Search extends Component {
                                     <Image source={require("../../assets/search.png")} style={{height: 18, width: 18}} />
                                 </View>
                                 <View>
-                                    <TouchableOpacity onPress={() => this.handleNavigation(item.symbol)}>
+                                    <TouchableOpacity onPress={() => this.handleNavigation(item.shortname, item.symbol)}>
                                         <View>
-                                            <Text style={{marginLeft: 15, fontSize: 13.5}}>{item.longname}</Text>
+                                            <Text style={{marginLeft: 15, fontSize: 13.5, textTransform:"capitalize"}}>{item.longname}</Text>
                                             <Text style={{marginLeft: 15, fontSize: 13.5, color:"#ADADAD", textTransform: 'uppercase'}}>{item.symbol}</Text>
                                         </View>
                                     </TouchableOpacity>

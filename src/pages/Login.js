@@ -86,7 +86,8 @@ export default class login extends React.Component {
     }
     handleLogin = async () => {
         const { email, password } = this.state;
-        signInWithEmailAndPassword(auth, email, password)
+        let emailTrimmed = email.trim()
+        signInWithEmailAndPassword(auth, emailTrimmed, password)
           .then((userCredential) => {
             const user = userCredential.user;
             console.log(user);

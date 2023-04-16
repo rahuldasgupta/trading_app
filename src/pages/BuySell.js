@@ -14,6 +14,7 @@ import {
     EmailAuthProvider,
   } from 'firebase/auth';
 import {initializeApp} from 'firebase/app';
+import moment from 'moment';
 import { collection, query, where, getDocs, getFirestore, doc, setDoc, addDoc  } from "firebase/firestore";
 import Toast, { BaseToast, InfoToast } from 'react-native-toast-message';
 import buy_arrow from '../../assets/buy_arrow.png';
@@ -29,9 +30,9 @@ const firebaseConfig = {
     messagingSenderId: "953809279589",
     appId: "1:953809279589:web:4dc86dca19957eb629848c",
     measurementId: "G-STVY05ZTL9"
-  };
+};
 
-  const toastConfig = {
+const toastConfig = {
     success: (props) => (
       <BaseToast
         {...props}
@@ -85,7 +86,12 @@ export default class BuySell extends Component {
     async componentDidMount(){
         NavigationBar.setBackgroundColorAsync("#fff");
         NavigationBar.setButtonStyleAsync("dark");
-
+        this.getUserData()
+        this.focusListener = this.props.navigation.addListener('focus', () => {
+            this.getUserData()
+        });
+    }
+    getUserData = async () => {
         let userData = await AsyncStorage.getItem('userData');
         let parsed = JSON.parse(userData);
         let email = parsed.email;
@@ -104,7 +110,6 @@ export default class BuySell extends Component {
             })
             this.checkStockInPortfolio(data.stocksOwned)
         });
-        
     }
     checkStockInPortfolio = (stockArr) => {
         let stock = this.props.route.params.symbol
@@ -166,6 +171,7 @@ export default class BuySell extends Component {
 
             newArray.push(obj)
             this.updateFirestore(newArray)
+            this.appendTransactions("buy")
         }
         else{
             console.log("here2")
@@ -178,6 +184,7 @@ export default class BuySell extends Component {
             }
             newArray.push(obj)
             this.updateFirestore(newArray)
+            this.appendTransactions("buy")
         }
     }
     sellStock = () => {
@@ -190,7 +197,9 @@ export default class BuySell extends Component {
             let totalQuantity = Number(oldQuantity) - Number(this.state.quantity)
             let total = totalOld-totalNew
             let newAverage = Number(total)/totalQuantity
-            console.log(newAverage)
+            if(newAverage==0 || newAverage != NaN){
+                newAverage = 0
+            }
 
             let obj = {
                 quantity : oldQuantity - Number(this.state.quantity),
@@ -204,6 +213,7 @@ export default class BuySell extends Component {
 
             newArray.push(obj)
             this.updateFirestore(newArray)
+            this.appendTransactions("sell")
         }
     }
     updateFirestore = async(obj) => {
@@ -237,6 +247,45 @@ export default class BuySell extends Component {
         }
         
     }
+    appendTransactions = async(mode) => {
+        let quantity = Number(this.state.quantity);
+        let price = Number(this.props.route.params.price);
+        let symbol = this.state.symbol;
+        let name = this.props.route.params.name;
+        const today = moment();
+        const formattedDate = today.format('Do MMMM, YYYY');
+        let formattedTime = today.format('hh:mm A');
+
+        let data= {}
+
+        let email = this.state.userData.email;
+        let docID = ""
+        let obj = {
+            quantity: quantity,
+            price: price,
+            symbol: symbol,
+            name: name,
+            time: formattedTime,
+            date: formattedDate,
+            mode: mode
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const q = query(collection(db, "users"), where("email", "==", email));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+            docID = doc.id,
+            data=doc.data()
+        });
+        let transactions = []
+        if(data.transactions != []){
+            transactions = data.transactions
+        }
+        transactions.push(obj)
+        const userRef = doc(db, "users", docID);
+        await setDoc(userRef, { transactions: transactions }, { merge: true });
+    }
   render() {
     return (
       <View style={{flex: 1, backgroundColor:"#fff", marginTop: Constants.statusBarHeight, minHeight: windowHeight}}>
@@ -246,7 +295,7 @@ export default class BuySell extends Component {
                 <TouchableOpacity onPress={() => this.props.navigation.goBack(null)}>
                     <Image source={require("../../assets/back_arrow.png")} style={{height: 27, width: 27}}/>
                 </TouchableOpacity>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => this.props.navigation.navigate("Search")}>
                     <Feather name="search" size={24} color="black" />
                 </TouchableOpacity>
             </View>

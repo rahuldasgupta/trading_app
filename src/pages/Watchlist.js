@@ -1,85 +1,90 @@
-import * as React from 'react';
-import { View, useWindowDimensions, Text, StyleSheet, TextInput} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, useWindowDimensions, Text, StyleSheet, RefreshControl, TouchableOpacity} from 'react-native';
 import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
+import { useNavigation } from '@react-navigation/native';
 import { Feather, AntDesign } from '@expo/vector-icons';
 import { Divider } from 'react-native-paper';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {initializeApp} from 'firebase/app';
+import { collection, query, where, getDocs, getFirestore, doc, setDoc, addDoc  } from "firebase/firestore";
+import { ScrollView } from 'react-native-gesture-handler';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAn3ZBRbTsPayK-lQ-pYKLDXFl3dpEeZMo",
+  authDomain: "tradingapp-e9640.firebaseapp.com",
+  projectId: "tradingapp-e9640",
+  storageBucket: "tradingapp-e9640.appspot.com",
+  messagingSenderId: "953809279589",
+  appId: "1:953809279589:web:4dc86dca19957eb629848c",
+  measurementId: "G-STVY05ZTL9"
+};
 
 const FirstRoute = () => {
-  const [searchText, setsearchText] = React.useState("");
-  const [randomValue, setRandomValue] = React.useState(0);
-  React.useEffect(() => {
-    generateRandom();
+  const [refreshing, setRefreshing] = useState(false);
+  const [userData, setuserData] = useState({});
+  const [watchlist, setWatchlist] = useState([]);
+  useEffect(() => {
+    getUserData();
   }, []);
 
-  const generateRandom = () => {
-    setRandomValue(Math.floor(Math.random() * 100) + 1)
-    setTimeout(() => {
-      generateRandom();
-    },1000); 
+  const getUserData = async() => {
+    setRefreshing(true)
+    let userData = await AsyncStorage.getItem('userData');
+    let parsed = JSON.parse(userData);
+    let email = parsed.email;
+    let data = {}
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const q = query(collection(db, "users"), where("email", "==", email));
+    const querySnapshot = await getDocs(q);
+
+    querySnapshot.forEach((doc) => {
+        data=doc.data()
+        setuserData(data)
+        setWatchlist(data.watchlist)
+    });
+    setRefreshing(false)
+  }
+  const navigation = useNavigation();
+  const handleNavigation = async(name, symbol) => {
+    navigation.navigate("Stock", {stockName: name, symbol: symbol})
   }
   return(
     <View style={{ flex: 1, backgroundColor: '#fff' }}>
-      <View style={{margin:"7.5%", marginTop: "6%", height: 50, backgroundColor:"#fff", borderWidth: 0.9, paddingLeft: 15, borderColor:"#BBBBBB", borderRadius: 8, flexDirection:"row", alignItems:"center"}}>
-        <Feather name="search" size={19} color="#222" style={{paddingRight: 7,}}/>
-        <TextInput
-          style={{
-              color: "#222",
-              fontSize: 18
-          }}
-          value={searchText}
-          placeholder="Search"
-          placeholderTextColor={"#9E9E9E"}
-          onChangeText={(e) => setsearchText(e)}
-        />
-      </View>
-      <View style={{margin:"7.5%", marginTop: "0%", marginBottom:"4%", justifyContent:"space-between", flexDirection:"row", alignItems:"center"}}>
-        <Text>Coffee Day Enterprise</Text>
-        <View>
-          <Text style={{textAlign:"right"}}>₹{randomValue/2}</Text>
-          <Text style={{textAlign:"right", alignItems:"center", color:"#da540d"}}><AntDesign name="caretdown" size={17} color="#da540d"/> -{randomValue%10}%</Text>
-        </View>
-      </View>
-      <Divider style={{height: 0.4, backgroundColor: '#ADADAD'}}/>
-      <View style={{margin:"7.5%", marginTop: "4%", marginBottom:"4%", justifyContent:"space-between", flexDirection:"row", alignItems:"center"}}>
-        <Text>Wipro</Text>
-        <View>
-          <Text style={{textAlign:"right"}}>₹{randomValue/5}</Text>
-          <View style={{flexDirection:"row"}}>
-            <AntDesign name="caretup" size={17} color="#5ecd9f" style={{marginTop: 3}}/>
-            <Text style={{textAlign:"right", alignItems:"center", color:"#5ecd9f"}}> {randomValue%8}%</Text>
+      <ScrollView style={{marginBottom: 65}} showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+                refreshing={refreshing}
+                onRefresh={getUserData}
+            />
+        }>
+        <TouchableOpacity onPress={()=> navigation.navigate("Search")}>
+          <View style={{margin:"7.5%", marginTop: "6%", height: 50, backgroundColor:"#fff", borderWidth: 0.9, paddingLeft: 15, borderColor:"#BBBBBB", borderRadius: 8, flexDirection:"row", alignItems:"center"}}>
+            <Feather name="search" size={19} color="#222" style={{paddingRight: 7,}}/>
+            <Text style={{ color: "#222", fontSize: 18}}>Search</Text>
           </View>
-        </View>
-      </View>
-      <Divider style={{height: 0.4, backgroundColor: '#ADADAD'}}/>
-      <View style={{margin:"7.5%", marginTop: "4%", marginBottom:"4%", justifyContent:"space-between", flexDirection:"row", alignItems:"center"}}>
-        <Text>Delhivery</Text>
+        </TouchableOpacity>
         <View>
-          <Text style={{textAlign:"right"}}>₹{randomValue*2}</Text>
-          <Text style={{textAlign:"right", alignItems:"center", color:"#da540d"}}><AntDesign name="caretdown" size={17} color="#da540d"/> -{randomValue%5}%</Text>
+            {
+              watchlist.map((item, key) =>(
+               <TouchableOpacity onPress={()=> navigation.navigate("Stock", {stockName: item.name, symbol: item.symbol})}>
+                  <View key={key}>
+                    <View style={{margin:"7.5%", marginTop: "0%", marginBottom:"4%", justifyContent:"space-between", flexDirection:"row", alignItems:"center"}}>
+                      <View>
+                        <Text style={{fontFamily:"Lato-Bold", fontSize: 16}}>{item.name}</Text>
+                        <Text style={{textAlign:"left", fontSize: 13.5, marginTop:4, fontFamily:"Lato-Regular", color:"#777777"}}>{item.symbol}</Text>
+                      </View>
+                      <Text style={{textAlign:"right", fontFamily:"Lato-Bold",}}>₹{item.price}</Text>
+                    </View>
+                    <Divider style={{height: 0.4, backgroundColor: '#ADADAD', marginBottom:"4%",}}/>
+                  </View>
+               </TouchableOpacity>
+              ))
+            }
         </View>
-      </View>
-      <Divider style={{height: 0.4, backgroundColor: '#ADADAD'}}/>
-      <View style={{margin:"7.5%", marginTop: "4%", marginBottom:"4%", justifyContent:"space-between", flexDirection:"row", alignItems:"center"}}>
-        <Text>Bikaji Foods International</Text>
-        <View>
-          <Text style={{textAlign:"right"}}>₹{randomValue*1}</Text>
-          <View style={{flexDirection:"row"}}>
-            <AntDesign name="caretup" size={17} color="#5ecd9f" style={{marginTop: 3}}/>
-            <Text style={{textAlign:"right", alignItems:"center", color:"#5ecd9f"}}> {randomValue%2}%</Text>
-          </View>
-        </View>
-      </View>
-      <Divider style={{height: 0.4, backgroundColor: '#ADADAD'}}/>
-      <View style={{margin:"7.5%", marginTop: "4%", marginBottom:"4%", justifyContent:"space-between", flexDirection:"row", alignItems:"center"}}>
-        <Text>Union Bank of India</Text>
-        <View>
-          <Text style={{textAlign:"right"}}>₹{randomValue/10}</Text>
-          <View style={{flexDirection:"row"}}>
-            <AntDesign name="caretup" size={17} color="#5ecd9f" style={{marginTop: 3}}/>
-            <Text style={{textAlign:"right", alignItems:"center", color:"#5ecd9f"}}> {randomValue%7}%</Text>
-          </View>
-        </View>
-      </View>
+      </ScrollView>
+     
     </View>
   )
 };
